@@ -65,6 +65,17 @@ app.get("/health/ready", async (_req, res) => {
   }
 });
 
+// Friendly service landing (human-visible at the deployed root).
+app.get("/", (_req, res) =>
+  res.json({
+    service: "healthcare-api",
+    status: "ok",
+    health: "/health",
+    ready: "/health/ready",
+    api: "/api/v1",
+  })
+);
+
 // Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/doctors", doctorRoutes);
@@ -81,6 +92,11 @@ app.use("/api/v1/admin", adminRoutes);
 
 // Audit logging (after routes, before error handler)
 app.use(auditMiddleware);
+
+// JSON 404 for any unmatched path (Express default would send HTML "Cannot GET /").
+app.use((req, res) =>
+  res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `No ${req.method} handler for ${req.path}` } })
+);
 
 // Error handler
 app.use(errorHandler);
